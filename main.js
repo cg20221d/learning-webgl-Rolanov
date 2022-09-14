@@ -43,5 +43,3 @@ function main() {
     gl.drawArrays(gl.POINTS, 0, 1);
 
 }
-main();
-//versiku
