@@ -16,11 +16,11 @@ function main() {
     var vertexShaderCode =  `
     attribute vec2 aPosition;
     attribute vec3 aColor;
+    uniform float uTheta;
     varying vec3 vColor;
     void main() {
-        float x = aPosition.x;
-        float y = aPosition.y;
-        gl_PointSize = 10.0;
+        float x = -sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y;
+        float y = cos(uTheta) * aPosition.x + sin(uTheta) * aPosition.y;
         gl_Position = vec4(x, y, 0.0, 1.0);
         vColor = aColor;
     }
@@ -47,6 +47,13 @@ function main() {
     gl.linkProgram(shaderProgram);
     gl.useProgram(shaderProgram);
 
+
+    // Variabel lokal
+    var theta = 0.0;
+
+    // Variabel pointe rke GLSL
+    var uTheta = gl.getUniformLocation(shaderProgram, "uTheta");
+
     //  Kita mengajari GPU bagaimana caranya mengoleksi
     //  nilai posisi dari ARRAY_BUFFER
     //  untuk setiap verteks yang sedang diproses
@@ -61,14 +68,17 @@ function main() {
         2 * Float32Array.BYTES_PER_ELEMENT);
     gl.enableVertexAttribArray(aColor);
 
-    gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
-    //            Merah     Hijau   Biru    Transparansi
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // gl.drawArrays(gl.POINTS, 0, 11);
-    //gl.drawArrays(gl.TRIANGLE_STRIP, 0 , 2);
-   // gl.drawArrays(gl.LINE_LOOP, 0 , 4);
-   gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-   // gl.drawArrays(gl.LINE_LOOP, 0, 3); sambungan titik titik
-   // gl.drawArrays(gl.TRIANGLES, 0, 4); // 2 dimensi, segitiga
+    function render(){
+         gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
+         //            Merah     Hijau   Biru    Transparansi
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        theta += 0.01;
+        gl.uniform1f(uTheta, theta);
+       // var vektor2D = [x, y];
+       // gl.uniform2f(uTheta, vektor2D[0], vektor2D[1]);
+       // gl.uniform2fv(uTheta, vektor2D);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
 }
