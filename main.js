@@ -107,13 +107,16 @@ function main() {
         //            Merah     Hijau   Biru    Transparansi
         gl.clear(gl.COLOR_BUFFER_BIT);
         if (!freeze) {
-            theta += 0.1;
+            theta += 0.05;
         }
         horizontalDelta += horizontalSpeed;
         verticalDelta -= verticalSpeed;
         var model = glMatrix.mat4.create(); // Membuat matriks identitas
         glMatrix.mat4.translate(
             model, model, [horizontalDelta, verticalDelta, 0.0]
+        );
+        glMatrix.mat4.rotateZ(
+            model, model, theta
         );
         gl.uniformMatrix4fv(uModel, false, model);
         gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
