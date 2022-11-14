@@ -17,10 +17,14 @@ function main() {
     attribute vec2 aPosition;
     attribute vec3 aColor;
     uniform float uTheta;
+    uniform float uUp;
+    uniform float uDown;
+    uniform float uRight;
+    uniform float uLeft;
     varying vec3 vColor;
     void main() {
-        float x = -sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y;
-        float y = cos(uTheta) * aPosition.x + sin(uTheta) * aPosition.y;
+        float x = -sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y + uRight - uLeft;
+        float y = cos(uTheta) * aPosition.x + sin(uTheta) * aPosition.y + uUp - uDown;
         gl_Position = vec4(x, y, 0.0, 1.0);
         vColor = aColor;
     }
@@ -51,9 +55,16 @@ function main() {
     // Variabel lokal
     var theta = 0.0;
     var freeze = false;
-
-    // Variabel pointe rke GLSL
+    var left = 0.0;
+    var right = 0.0;
+    var up = 0.0;
+    var down = 0.0;
+    // Variabel pointer ke GLSL
     var uTheta = gl.getUniformLocation(shaderProgram, "uTheta");
+    var uUp = gl.getUniformLocation(shaderProgram, "uUp");
+    var uLeft = gl.getUniformLocation(shaderProgram, "uLeft");
+    var uRight = gl.getUniformLocation(shaderProgram, "uRight");
+    var uDown = gl.getUniformLocation(shaderProgram, "uDown");
 
     //  Kita mengajari GPU bagaimana caranya mengoleksi
     //  nilai posisi dari ARRAY_BUFFER
@@ -75,6 +86,19 @@ function main() {
         freeze = !freeze;
     }
     document.addEventListener("click", onMouseClick, false);
+    // papan ketuk/keyboard
+    function onKeyDown(event){
+        if(event.keyCode == 32) freeze = !freeze;
+        if(event.keyCode == 87) FUp();
+        if(event.keyCode == 83) FDown();
+        if(event.keyCode == 68) FRight();
+        if(event.keyCode == 65) FLeft();
+    }
+    function onKeyUp(event){
+        if(event.keyCode == 32) freeze = !freeze;
+    }
+    document.addEventListener("keydown", onKeyDown, false);
+    document.addEventListener("keyup", onKeyUp, false);
 
     function render(){
          gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
@@ -91,4 +115,36 @@ function main() {
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
+    function FUp(){
+        gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
+         //            Merah     Hijau   Biru    Transparansi
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        up += 0.1;
+        gl.uniform1f(uUp, up);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    }
+    function FDown(){
+        gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
+         //            Merah     Hijau   Biru    Transparansi
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        down += 0.1;
+        gl.uniform1f(uDown, down);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    }
+    function FLeft(){
+        gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
+         //            Merah     Hijau   Biru    Transparansi
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        left += 0.1;
+        gl.uniform1f(uLeft, left);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    }
+    function FRight(){
+        gl.clearColor(1.0,      0.65,    0.0,    1.0);  // Oranye
+         //            Merah     Hijau   Biru    Transparansi
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        right += 0.1;
+        gl.uniform1f(uRight, right);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    }
 }
