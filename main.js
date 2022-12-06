@@ -83,6 +83,7 @@ function main() {
     varying vec3 vNormal;
     varying vec3 vPosition;             // titik fragmen
     uniform vec3 uLightPosition;        // titik lokasi sumber cahaya
+    uniform vec3 uViewerPosition;       // titik lokasi mata atau kamera pengamat
     uniform mat3 uNormalModel;
     void main() {
         vec3 ambient = uLightConstant * uAmbientIntensity;
@@ -95,7 +96,16 @@ function main() {
             float diffuseIntensity = cosTheta;
             diffuse = uLightConstant * diffuseIntensity;
         }
-        vec3 phong = ambient + diffuse;
+        vec3 normalizedReflector = normalize(reflect(lightRay, normalizedNormal));
+        vec3 normalizedViewer = normalize(uViewerPosition - vPosition);
+        float cosPhi = dot(normalizedReflector, normalizedViewer);
+        vec3 specular = vec3(0.0, 0.0, 0.0);
+        if (cosPhi > 0.0) {
+            float shininessConstant = 100.0;    // batas minimum spesifikasi spekular untuk materi logam
+            float specularIntensity = pow(cosPhi, shininessConstant);
+            specular = uLightConstant * specularIntensity;
+        }
+        vec3 phong = ambient + diffuse + specular;
         gl_FragColor = vec4(phong * vColor, 1.0);
     }
     `;
@@ -120,14 +130,15 @@ function main() {
     // Variabel pointer ke GLSL
     var uModel = gl.getUniformLocation(shaderProgram, "uModel");
     // View
-    var cameraX = 0.0;
-    var cameraZ = 5.0;
+    // var cameraX = 0.0;
+    // var cameraZ = 5.0;
+    var camera = [0.0, 0.0, 5.0];
     var uView = gl.getUniformLocation(shaderProgram, "uView");
     var view = glMatrix.mat4.create();
     glMatrix.mat4.lookAt(
         view,
-        [cameraX, 0.0, cameraZ],    // the location of the eye or the camera
-        [cameraX, 0.0, -10],        // the point where the camera look at
+        camera,                         // lokasi mata atau kamera pengamat
+        [camera[0], 0.0, -10.0],        // titik ke mana kamera mengamat
         [0.0, 1.0, 0.0]
     );
     // Projection
@@ -162,6 +173,8 @@ function main() {
     var uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
     gl.uniform3fv(uLightPosition, [2.0, 0.0, 0.0]);
     var uNormalModel = gl.getUniformLocation(shaderProgram, "uNormalModel");
+    var uViewerPosition = gl.getUniformLocation(shaderProgram, "uViewerPosition");
+    gl.uniform3fv(uViewerPosition, camera);
 
     // Grafika interaktif
     // Tetikus
@@ -171,7 +184,6 @@ function main() {
     document.addEventListener("click", onMouseClick);
     // Papan ketuk
     function onKeydown(event) {
-        if (event.keyCode == 32) freeze = !freeze;  // spasi
         // Gerakan horizontal: a ke kiri, d ke kanan
         if (event.keyCode == 65) {  // a
             horizontalSpeed = -0.01;
@@ -184,14 +196,32 @@ function main() {
         } else if (event.keyCode == 83) {   // s
             verticalSpeed = 0.01;
         }
+        // Pergerakan kamera berdasarkan panah pada papan ketuk
+        // Horizontal
+        if (event.keyCode == 37) {  // kiri
+            camera[0] -= 0.1;
+        } else if (event.keyCode == 39) {   // kanan
+            camera[0] += 0.1;
+        }
+        // Vertikal
+        if (event.keyCode == 38) {  // atas
+            camera[1] -= 0.1;
+        } else if (event.keyCode == 40) {   // bawah
+            camera[1] += 0.1;
+        }
+        gl.uniform3fv(uViewerPosition, camera);
+        glMatrix.mat4.lookAt(view, camera, [camera[0], camera[1], -10.0], [0.0, 1.0, 0.0]);
     }
     function onKeyup(event) {
-        if (event.keyCode == 32) freeze = !freeze;
         if (event.keyCode == 65 || event.keyCode == 68) horizontalSpeed = 0.0;
         if (event.keyCode == 87 || event.keyCode == 83) verticalSpeed = 0.0;
     }
+    function onKeypress(event) {
+        if (event.keyCode == 32) freeze = !freeze;
+    }
     document.addEventListener("keydown", onKeydown);
     document.addEventListener("keyup", onKeyup);
+    document.addEventListener("keypress", onKeypress);
 
     function render() {
         gl.enable(gl.DEPTH_TEST);
